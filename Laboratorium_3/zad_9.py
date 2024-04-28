@@ -17,6 +17,7 @@ def wylosuj_liczby():
     return liczby      
 
 def czy_jest_wygrana(numery_klienta, lotto):
+
     print(f"Numery klienta: {numery_klienta}")
     print(f"Numery LOTTO: {lotto}")     
 
@@ -41,8 +42,6 @@ def czy_jest_wygrana(numery_klienta, lotto):
             print(f"Liczba trafień: {trafione}")
         case _: 
             print(f"Brak trafień")
-
-
 
 def main():
     
