@@ -14,6 +14,8 @@ def wylosuj_liczby():
         if nowa_liczba not in liczby:
             liczby.append(nowa_liczba)
 
+    liczby.sort()
+
     return liczby      
 
 def czy_jest_wygrana(numery_klienta, lotto):
@@ -29,17 +31,17 @@ def czy_jest_wygrana(numery_klienta, lotto):
 
     match trafione:
         case 6: 
-            print(f"Liczba trafień: {trafione}")
+            print(f"Liczba trafień: {trafione}/6")
         case 5: 
-            print(f"Liczba trafień: {trafione}")
+            print(f"Liczba trafień: {trafione}/6")
         case 4: 
-            print(f"Liczba trafień: {trafione}")
+            print(f"Liczba trafień: {trafione}/6")
         case 3: 
-            print(f"Liczba trafień: {trafione}")
+            print(f"Liczba trafień: {trafione}/6")
         case 2: 
-            print(f"Liczba trafień: {trafione}")
+            print(f"Liczba trafień: {trafione}/6")
         case 1: 
-            print(f"Liczba trafień: {trafione}")
+            print(f"Liczba trafień: {trafione}/6")
         case _: 
             print(f"Brak trafień")
 
