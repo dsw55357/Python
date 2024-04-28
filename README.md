@@ -1,2 +1,2 @@
-# phyton1
-Python.
+# 
+Laboratorium z Python.
