@@ -17,8 +17,8 @@ def main():
         except ValueError:
             print("Wprowadzona wartość nie jest liczbą. Spróbuj ponownie.")
             continue
-        
-    if index > 0:
+
+    if index > 1:
         srednia = suma / (index-1)
         print(f"średnia {suma}/{index-1}={srednia}")
     else:
