@@ -16,7 +16,7 @@ def main():
 
     liczba = random.randint(1, 100)     
     i = 1
-    print(liczba)
+    
     while i <= 3:
         n = int(input(f"Próba: {i} - Podaj liczb: "))
         i += 1
