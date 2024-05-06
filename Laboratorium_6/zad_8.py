@@ -25,6 +25,9 @@ def main():
 
     print(f"sorted: {lista}")
 
+    print(f"reverse: {lista[::-1]}")
+
+
 
 if __name__ == "__main__":
     
