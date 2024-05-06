@@ -91,7 +91,6 @@ def na_chybil_trafil():
         print("\nNieprawidłowy wybór! Sp©óbuj raz jeszcze")
 
 
-
 def wyswietl_menu():
      
     print("\nZagraj w Lotto:")
