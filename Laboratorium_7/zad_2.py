@@ -46,8 +46,6 @@ def main():
     print(s_insert)
     print(type(s_insert))
 
-
-
 if __name__ == "__main__":
     
     main()
