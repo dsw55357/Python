@@ -1,8 +1,18 @@
 """
-
+zad.1:
 Utwórz 4 zestawy złożone z nazw drużyn sportowych min. 10 na każdy zestaw. Spraw by część nazw się powtarzała np. LigaMistrzow= set(["Real Madrid", "PSG", "Bayern
 Monachium”"]) Nazwy drużyn do zestawów powinny zostać wpisane losowo z puli 20
 zespołów.
+
+zad.2
+Sprawdź za pomocą metod intersection(), difference(), union(), issuperset() oraz
+issubset() jak zachowają się te 4 zbiory. Jakie można wyciągnąć z tych zestawów
+informacje?
+
+zad.3
+Sprawdź długość zestawów. Usuń wybrane elementy z zestawów, które się pojawiają.
+Dokonaj wybranych porównań. Dokonaj konwersji z zestawu na listę. Co dzięki
+takiemu działaniu zyskujemy?
 
 """
 
@@ -99,6 +109,30 @@ def main():
 
     czy_3_zawiera_podzespol_2 = zestaw_3.issubset(zestaw_2)
     print(f"czy zestaw_3 jest podzbiorem zestaw_2 ? : {czy_3_zawiera_podzespol_2}")
+
+# część zad.3
+
+    # Sprawdzenie długości zestawów
+    print(len(zestaw_1)) 
+    print(len(zestaw_2))
+    print(len(zestaw_3))
+    print(len(zestaw_4))
+
+    # Konwersja z zestawu na listę:
+    lista_a = list(zestaw_2)
+    lista_d = list(zestaw_4)
+
+    print(lista_a)
+    print(lista_d)
+
+    #Usuwanie wybranych elementów z zestawów:
+    print(lista_a[0])
+    zestaw_2.remove(lista_a[0])
+    print(lista_d[len(lista_d)-1])
+    zestaw_4.remove(lista_d[len(lista_d)-1])
+
+    print(zestaw_2)
+    print(zestaw_4)
 
 
 if __name__ == "__main__":
