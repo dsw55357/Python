@@ -196,7 +196,7 @@ def OnUserUpdate():
         # Rysowanie modelu asteroid
         draw_wireframe_model(screen, vecModelAsteroid, a.x, a.y, a.angle, 50, (255, 255, 0))
         # test
-        #pg.draw.circle(screen, (255,0, 0), (a.x, a.y), a.nSize)
+        pg.draw.circle(screen, (255,0, 0), (a.x, a.y), a.nSize)
 
 	# VELOCITY changes POSITION (with respect to time)
     player.x += player.dx * fElapsedTime
