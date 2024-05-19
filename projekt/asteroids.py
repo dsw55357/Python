@@ -105,7 +105,7 @@ def OnCreate():
         angle = (i / verts) * 2 * math.pi  # Obliczenie kąta w radianach
         vecModelAsteroid.append((noise * math.sin(angle), noise * math.cos(angle)))
 
-    # Przykładowe wywołanie funkcji reset_game
+    # funkcji reset_game - zerujemy liczniki na start :)
     reset_game()
 
 def create_asteroid():
@@ -242,8 +242,6 @@ def main():
             if e.type == pg.QUIT or (e.type == pg.KEYUP and e.key == pg.K_ESCAPE):
                 running = False
                 #break
-            # if e.type == pg.MOUSEBUTTONDOWN and e.button == 1:
-            #     WINCENTER[:] = list(e.pos)
 
             # Obsługa klawiszy
             if e.type == pg.KEYDOWN:
@@ -256,8 +254,8 @@ def main():
                     player.dy += -math.cos(player.angle) * 50.0 * fElapsedTime * 5
                     print("key UP")    
 
-        score_text = font.render(f'Player pos.x: {player.dx}, {player.dy}', True, (255, 255, 255))
-        screen.blit(score_text, (2, 25))
+        player_pos_text = font.render(f'Player pos.x: {player.x:.2f}, {player.y:.2f}', True, (255, 255, 255))
+        screen.blit(player_pos_text, (2, screen_height()-25))
        
         # Rysowanie wyniku
         score_text = font.render(f'SCORE: {nScore}', True, (255, 255, 255))
@@ -269,7 +267,8 @@ def main():
         # Sprawdzenie, czy gracz jest martwy
         if bDead:
             print("Player is dead!")
-            running = False
+            # running = False
+            reset_game() # zaczynamy od nowa
 
     pg.quit()   
 
