@@ -8,6 +8,7 @@ Status: w trakcie budowy :)
 
 """
 
+import os
 import pygame as pg
 import math
 import random
@@ -26,6 +27,7 @@ bDead = False
 clock = None
 screen = None
 font = None
+boom_sound = None
 
 class SpaceObject:
     def __init__(self, nSize, x, y, dx, dy, angle):
@@ -51,6 +53,21 @@ vecModelShip = [
     (-2.5, 2.5),
     (2.5, 2.5)
 ]
+
+main_dir = os.path.split(os.path.abspath(__file__))[0]
+
+def load_sound(file):
+    """because pygame can be compiled without mixer."""
+    if not pg.mixer:
+        return None
+    file = os.path.join(main_dir, "data", file)
+    try:
+        sound = pg.mixer.Sound(file)
+        return sound
+    except pg.error:
+        print(f"Warning, unable to load, {file}")
+    return None
+
 
 def screen_width():
     return WINSIZE[0]  # Przykładowa szerokość ekranu, dostosuj do faktycznych wymiarów
@@ -86,6 +103,7 @@ def reset_game():
 def OnCreate():
 
     global clock, screen, font
+
     # initialize and prepare screen
     pg.init()
 
@@ -186,7 +204,7 @@ def is_point_inside_circle(cx, cy, radius, px, py):
 
 def OnUserUpdate():
 
-    global fElapsedTime, bDead, vecBullets, nScore, vecAsteroids
+    global fElapsedTime, bDead, vecBullets, nScore, vecAsteroids, boom_sound
     #fElapsedTime = 0.016  # Przykładowa wartość czasu trwania jednej klatki (~60 FPS)
 
     for a in vecAsteroids:
@@ -211,6 +229,8 @@ def OnUserUpdate():
     # Sprawdzenie kolizji statku z asteroidami
     for a in vecAsteroids:
         if is_point_inside_circle(a.x, a.y, a.nSize, player.x, player.y):
+            if pg.mixer and boom_sound is not None:
+                boom_sound.play()
             bDead = True
 
     newAsteroids = []
@@ -226,6 +246,8 @@ def OnUserUpdate():
             if is_point_inside_circle(a.x, a.y, a.nSize, bullet.x, bullet.y):
                 # Pocisk trafia asteroidę - usuwamy pocisk
                 bullet.x = -100  # Pocisk poza ekranem, zostanie usunięty w algorytmie czyszczenia
+                if pg.mixer and boom_sound is not None:
+                    boom_sound.play()
 
                 # Tworzenie mniejszych asteroid po zniszczeniu dużej
                 if a.nSize > 4:
@@ -253,7 +275,6 @@ def OnUserUpdate():
     # Narysuj Shipa
     draw_wireframe_model(screen, vecModelShip, player.x, player.y, player.angle)
 
-
 def fill_screen(color):
 
     screen.fill(color)
@@ -263,9 +284,14 @@ def main():
 
     print("Asteroids..")
 
-    global fElapsedTime, bDead, nScore, font
+    global fElapsedTime, bDead, nScore, font, boom_sound
 
     OnCreate()
+
+    # load the sound effects
+    fire_sound = load_sound("fire.wav")
+    boom_sound = load_sound("bangMedium.wav")
+    thrust_sound = load_sound("thrust.wav")
 
     running = True
     nScore = 0
@@ -290,15 +316,17 @@ def main():
                 if e.key == pg.K_UP:
                     player.dx += math.sin(player.angle) * 50.0 * fElapsedTime * 5
                     player.dy += -math.cos(player.angle) * 50.0 * fElapsedTime * 5
-                    print("key UP")
+                    if pg.mixer and thrust_sound is not None:
+                        thrust_sound.play()
                 if e.key == pg.K_SPACE:
                     vecBullets.append(SpaceObject(0, player.x, player.y, 50.0 * math.sin(player.angle), -50.0 * math.cos(player.angle), 0.0))
+                    if pg.mixer and fire_sound is not None:
+                        fire_sound.play()
                 if e.key == pg.K_F8:
                     bDead = True # symulujemy kolizję statu z asteroidą
 
-
-        player_pos_text = font.render(f'Player pos.x: {player.x:.2f}, {player.y:.2f}', True, (255, 255, 255))
-        screen.blit(player_pos_text, (2, screen_height()-25))
+        # player_pos_text = font.render(f'Player pos.x: {player.x:.2f}, {player.y:.2f}', True, (255, 255, 255))
+        # screen.blit(player_pos_text, (2, screen_height()-25))
        
         # Rysowanie wyniku
         score_text = font.render(f'SCORE: {nScore}', True, (0, 125, 255))
@@ -310,13 +338,13 @@ def main():
 
             while bDead:
                 game_over_text = font.render(f'Game Over', True, (255, 0, 0))
-                screen.blit(game_over_text, (screen_width()/2-50, screen_height()/2))
+                screen.blit(game_over_text, (screen_width()/2-80, screen_height()/2))
 
                 new_game_text = font.render(f'New game, press n', True, (255, 255, 0))
-                screen.blit(new_game_text, (screen_width()/2-50, screen_height()/2+30))
+                screen.blit(new_game_text, (screen_width()/2-90, screen_height()/2+40))
 
                 end_game_text = font.render(f'Quit, press q or ESC', True, (255, 0, 255))
-                screen.blit(end_game_text, (screen_width()/2-50, screen_height()/2+60))
+                screen.blit(end_game_text, (screen_width()/2-90, screen_height()/2+70))
 
                 for e in pg.event.get():
                     if e.type == pg.KEYDOWN:
@@ -339,8 +367,6 @@ def main():
         clock.tick(50)
 
     pg.quit()   
-
-
 
 if __name__ == "__main__":
     
