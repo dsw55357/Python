@@ -293,28 +293,50 @@ def main():
                     print("key UP")
                 if e.key == pg.K_SPACE:
                     vecBullets.append(SpaceObject(0, player.x, player.y, 50.0 * math.sin(player.angle), -50.0 * math.cos(player.angle), 0.0))
+                if e.key == pg.K_F8:
+                    bDead = True # symulujemy kolizję statu z asteroidą
 
 
         player_pos_text = font.render(f'Player pos.x: {player.x:.2f}, {player.y:.2f}', True, (255, 255, 255))
         screen.blit(player_pos_text, (2, screen_height()-25))
        
         # Rysowanie wyniku
-        score_text = font.render(f'SCORE: {nScore}', True, (255, 255, 255))
+        score_text = font.render(f'SCORE: {nScore}', True, (0, 125, 255))
         screen.blit(score_text, (4, 4))
 
         # Sprawdzenie, czy gracz jest martwy
         if bDead:
             print("Player is dead!")
 
-            # game_over_text = font.render(f'Game Over', True, (255, 0, 0))
-            # screen.blit(game_over_text, (screen_width()/2, screen_height()/2))
-            # time.sleep(1)
+            while bDead:
+                game_over_text = font.render(f'Game Over', True, (255, 0, 0))
+                screen.blit(game_over_text, (screen_width()/2-50, screen_height()/2))
 
-            reset_game() # zaczynamy od nowa
+                new_game_text = font.render(f'New game, press n', True, (255, 255, 0))
+                screen.blit(new_game_text, (screen_width()/2-50, screen_height()/2+30))
+
+                end_game_text = font.render(f'Quit, press q or ESC', True, (255, 0, 255))
+                screen.blit(end_game_text, (screen_width()/2-50, screen_height()/2+60))
+
+                for e in pg.event.get():
+                    if e.type == pg.KEYDOWN:
+                        print("...")
+                        if e.key == pg.K_n:
+                            reset_game() # zaczynamy od nowa
+                            break
+                        if e.key == pg.K_ESCAPE or e.key == pg.K_q:
+                            running = False
+                            bDead = False
+                            break
+                    # time.sleep(1)
+
+                pg.display.update()
+                clock.tick(50)
+
+            #reset_game() # zaczynamy od nowa
         
         pg.display.update()
         clock.tick(50)
-
 
     pg.quit()   
 
