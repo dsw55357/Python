@@ -11,6 +11,7 @@ Status: w trakcie budowy :)
 import pygame as pg
 import math
 import random
+import time
 
 # constants
 # 1080p
@@ -184,7 +185,7 @@ def is_point_inside_circle(cx, cy, radius, px, py):
 
 def OnUserUpdate():
 
-    global fElapsedTime, bDead
+    global fElapsedTime, bDead, vecBullets
     #fElapsedTime = 0.016  # Przykładowa wartość czasu trwania jednej klatki (~60 FPS)
 
     for a in vecAsteroids:
@@ -211,8 +212,21 @@ def OnUserUpdate():
         if is_point_inside_circle(a.x, a.y, a.nSize, player.x, player.y):
             bDead = True
 
+    # Aktualizacja pozycji i rysowanie pocisków
+    for bullet in vecBullets:
+        bullet.x += bullet.dx * fElapsedTime
+        bullet.y += bullet.dy * fElapsedTime
 
-    # Draw Ship
+        # 
+        bullet.x, bullet.y = wrap_coordinates(bullet.x, bullet.y, screen_width(), screen_height())
+
+        # Rysowanie pocisków
+        pg.draw.circle(screen, (255, 255, 255), (int(bullet.x), int(bullet.y)), 2)
+
+    # Usuwanie pocisków z poza ekranem - tworzy nową listę w której znajdują się tylko te elem które są na scenie
+    vecBullets = [bullet for bullet in vecBullets if 1 <= bullet.x < screen_width() - 1 and 1 <= bullet.y < screen_height() - 1]
+
+    # Narysuj Shipa
     draw_wireframe_model(screen, vecModelShip, player.x, player.y, player.angle)
 
 
@@ -223,7 +237,7 @@ def fill_screen(color):
 
 def main():
 
-    print("Asteroid..")
+    print("Asteroids..")
 
     global fElapsedTime, bDead, nScore, font
 
@@ -252,7 +266,10 @@ def main():
                 if e.key == pg.K_UP:
                     player.dx += math.sin(player.angle) * 50.0 * fElapsedTime * 5
                     player.dy += -math.cos(player.angle) * 50.0 * fElapsedTime * 5
-                    print("key UP")    
+                    print("key UP")
+                if e.key == pg.K_SPACE:
+                    vecBullets.append(SpaceObject(0, player.x, player.y, 50.0 * math.sin(player.angle), -50.0 * math.cos(player.angle), 0.0))
+
 
         player_pos_text = font.render(f'Player pos.x: {player.x:.2f}, {player.y:.2f}', True, (255, 255, 255))
         screen.blit(player_pos_text, (2, screen_height()-25))
@@ -261,14 +278,19 @@ def main():
         score_text = font.render(f'SCORE: {nScore}', True, (255, 255, 255))
         screen.blit(score_text, (2, 2))
 
-        pg.display.update()
-        clock.tick(50)
-
         # Sprawdzenie, czy gracz jest martwy
         if bDead:
             print("Player is dead!")
-            # running = False
+
+            # game_over_text = font.render(f'Game Over', True, (255, 0, 0))
+            # screen.blit(game_over_text, (screen_width()/2, screen_height()/2))
+            # time.sleep(1)
+
             reset_game() # zaczynamy od nowa
+        
+        pg.display.update()
+        clock.tick(50)
+
 
     pg.quit()   
 
