@@ -15,9 +15,10 @@ import time
 
 # constants
 # 1080p
-WINSIZE = [1280, 720]
-WINCENTER = [320, 240]
-NUMSTARS = 150
+# WINSIZE = [1280, 720]
+WINSIZE = [800, 600]
+#WINCENTER = [320, 240]
+#NUMSTARS = 150
 
 fElapsedTime = 0.016  # Przykładowa wartość czasu trwania jednej klatki (~60 FPS)
 
@@ -185,7 +186,7 @@ def is_point_inside_circle(cx, cy, radius, px, py):
 
 def OnUserUpdate():
 
-    global fElapsedTime, bDead, vecBullets
+    global fElapsedTime, bDead, vecBullets, nScore, vecAsteroids
     #fElapsedTime = 0.016  # Przykładowa wartość czasu trwania jednej klatki (~60 FPS)
 
     for a in vecAsteroids:
@@ -197,11 +198,11 @@ def OnUserUpdate():
         a.x, a.y = wrap_coordinates(a.x, a.y, screen_width(), screen_height())
     
         # Rysowanie modelu asteroid
-        draw_wireframe_model(screen, vecModelAsteroid, a.x, a.y, a.angle, 50, (255, 255, 0))
+        draw_wireframe_model(screen, vecModelAsteroid, a.x, a.y, a.angle, a.nSize, (255, 255, 0))
         # test
-        pg.draw.circle(screen, (255,0, 0), (a.x, a.y), a.nSize)
+        #pg.draw.circle(screen, (255,0, 0), (a.x, a.y), a.nSize)
 
-	# VELOCITY changes POSITION (with respect to time)
+    # VELOCITY changes POSITION (with respect to time)
     player.x += player.dx * fElapsedTime
     player.y += player.dy * fElapsedTime
 
@@ -212,16 +213,39 @@ def OnUserUpdate():
         if is_point_inside_circle(a.x, a.y, a.nSize, player.x, player.y):
             bDead = True
 
+    newAsteroids = []
+
     # Aktualizacja pozycji i rysowanie pocisków
     for bullet in vecBullets:
-        bullet.x += bullet.dx * fElapsedTime
-        bullet.y += bullet.dy * fElapsedTime
-
+        bullet.x += bullet.dx * fElapsedTime * 2
+        bullet.y += bullet.dy * fElapsedTime * 2
         # 
         bullet.x, bullet.y = wrap_coordinates(bullet.x, bullet.y, screen_width(), screen_height())
 
+        for a in vecAsteroids:
+            if is_point_inside_circle(a.x, a.y, a.nSize, bullet.x, bullet.y):
+                # Pocisk trafia asteroidę - usuwamy pocisk
+                bullet.x = -100  # Pocisk poza ekranem, zostanie usunięty w algorytmie czyszczenia
+
+                # Tworzenie mniejszych asteroid po zniszczeniu dużej
+                if a.nSize > 4:
+                    angle1 = random.uniform(0, 2 * math.pi)
+                    angle2 = random.uniform(0, 2 * math.pi)
+                    newAsteroids.append(SpaceObject(a.nSize // 2, a.x, a.y, 10.0 * math.sin(angle1), 10.0 * math.cos(angle1), 0.0))
+                    newAsteroids.append(SpaceObject(a.nSize // 2, a.x, a.y, 10.0 * math.sin(angle2), 10.0 * math.cos(angle2), 0.0))
+
+                # Usuwanie asteroidy
+                a.x = -100  # Asteroida poza ekranem, zostanie usunięta w algorytmie czyszczenia
+                nScore += 100  # Zwiększenie wyniku za trafienie asteroidy
+
         # Rysowanie pocisków
         pg.draw.circle(screen, (255, 255, 255), (int(bullet.x), int(bullet.y)), 2)
+
+    # Dodanie nowych asteroid do listy
+    vecAsteroids.extend(newAsteroids)
+
+    # Usuwanie asteroid poza ekranu - tych trafionych
+    vecAsteroids = [asteroid for asteroid in vecAsteroids if asteroid.x >= 0]
 
     # Usuwanie pocisków z poza ekranem - tworzy nową listę w której znajdują się tylko te elem które są na scenie
     vecBullets = [bullet for bullet in vecBullets if 1 <= bullet.x < screen_width() - 1 and 1 <= bullet.y < screen_height() - 1]
@@ -260,9 +284,9 @@ def main():
             # Obsługa klawiszy
             if e.type == pg.KEYDOWN:
                 if e.key == pg.K_LEFT:
-                    player.angle -= 5.0 * fElapsedTime * 5
+                    player.angle -= 5.0 * fElapsedTime * 4
                 if e.key == pg.K_RIGHT:
-                    player.angle += 5.0 * fElapsedTime * 5
+                    player.angle += 5.0 * fElapsedTime * 4
                 if e.key == pg.K_UP:
                     player.dx += math.sin(player.angle) * 50.0 * fElapsedTime * 5
                     player.dy += -math.cos(player.angle) * 50.0 * fElapsedTime * 5
@@ -276,7 +300,7 @@ def main():
        
         # Rysowanie wyniku
         score_text = font.render(f'SCORE: {nScore}', True, (255, 255, 255))
-        screen.blit(score_text, (2, 2))
+        screen.blit(score_text, (4, 4))
 
         # Sprawdzenie, czy gracz jest martwy
         if bDead:
