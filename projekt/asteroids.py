@@ -18,12 +18,11 @@ import time
 # 1080p
 # WINSIZE = [1280, 720]
 WINSIZE = [800, 600]
-#WINCENTER = [320, 240]
-#NUMSTARS = 150
 
 fElapsedTime = 0.016  # Przykładowa wartość czasu trwania jednej klatki (~60 FPS)
 
 bDead = False
+bPause = False
 clock = None
 screen = None
 font = None
@@ -250,7 +249,7 @@ def OnUserUpdate():
                     boom_sound.play()
 
                 # Tworzenie mniejszych asteroid po zniszczeniu dużej
-                if a.nSize > 4:
+                if a.nSize > 6:
                     angle1 = random.uniform(0, 2 * math.pi)
                     angle2 = random.uniform(0, 2 * math.pi)
                     newAsteroids.append(SpaceObject(a.nSize // 2, a.x, a.y, 10.0 * math.sin(angle1), 10.0 * math.cos(angle1), 0.0))
@@ -266,8 +265,17 @@ def OnUserUpdate():
     # Dodanie nowych asteroid do listy
     vecAsteroids.extend(newAsteroids)
 
-    # Usuwanie asteroid poza ekranu - tych trafionych
+    # Usuwanie asteroid z poza ekranu - tych trafionych
     vecAsteroids = [asteroid for asteroid in vecAsteroids if asteroid.x >= 0]
+
+    # Sprawdzenie, czy wszystkie asteroidy zostały zniszczone
+    if not vecAsteroids:
+        nScore += 1000  # Duży bonus za ukończenie poziomu
+        vecBullets.clear()
+        # Dodanie dwóch nowych asteroid
+        vecAsteroids.append(SpaceObject(16, 30.0 * math.sin(player.angle - math.pi / 2) + player.x, 30.0 * math.cos(player.angle - math.pi / 2) + player.y, 10.0 * math.sin(player.angle), 10.0 * math.cos(player.angle), 0.0))
+        vecAsteroids.append(SpaceObject(16, 30.0 * math.sin(player.angle + math.pi / 2) + player.x, 30.0 * math.cos(player.angle + math.pi / 2) + player.y, 10.0 * math.sin(-player.angle), 10.0 * math.cos(-player.angle), 0.0))
+
 
     # Usuwanie pocisków z poza ekranem - tworzy nową listę w której znajdują się tylko te elem które są na scenie
     vecBullets = [bullet for bullet in vecBullets if 1 <= bullet.x < screen_width() - 1 and 1 <= bullet.y < screen_height() - 1]
@@ -284,7 +292,7 @@ def main():
 
     print("Asteroids..")
 
-    global fElapsedTime, bDead, nScore, font, boom_sound
+    global fElapsedTime, bDead, nScore, font, boom_sound, bPause
 
     OnCreate()
 
@@ -324,6 +332,8 @@ def main():
                         fire_sound.play()
                 if e.key == pg.K_F8:
                     bDead = True # symulujemy kolizję statu z asteroidą
+                if e.key == pg.K_p:
+                    bPause = True
 
         # player_pos_text = font.render(f'Player pos.x: {player.x:.2f}, {player.y:.2f}', True, (255, 255, 255))
         # screen.blit(player_pos_text, (2, screen_height()-25))
@@ -332,9 +342,23 @@ def main():
         score_text = font.render(f'SCORE: {nScore}', True, (0, 125, 255))
         screen.blit(score_text, (4, 4))
 
+        if bPause:
+            print("Pause")
+            while bPause:
+                pause_text = font.render(f'Pause, press p to start', True, (0, 0, 255))
+                screen.blit(pause_text, (screen_width()/2-80, screen_height()/2))
+                for e in pg.event.get():
+                    if e.type == pg.KEYDOWN:
+                        if e.key == pg.K_p:
+                            bPause = False
+                            break
+                
+                pg.display.update()
+                clock.tick(50)  
+
         # Sprawdzenie, czy gracz jest martwy
         if bDead:
-            print("Player is dead!")
+            #print("Player is dead!")
 
             while bDead:
                 game_over_text = font.render(f'Game Over', True, (255, 0, 0))
@@ -356,7 +380,6 @@ def main():
                             running = False
                             bDead = False
                             break
-                    # time.sleep(1)
 
                 pg.display.update()
                 clock.tick(50)
