@@ -4,6 +4,8 @@ Projekt na zalicznie
 
 Asteroids – gra komputerowa stworzona przez firmę Atari, wydana została w roku 1979 na automaty do gry oraz konsolę Atari 2600. W roku 1981 została wydana na komputer Atari 800. Firma Atari wydała jeszcze oficjalne wersje na konsole Atari 5200 i Atari 7800 oraz na komputery Acorn BBC Micro i Atari ST. 
 
+Status: w trakcie budowy :)
+
 """
 
 import pygame as pg
@@ -253,12 +255,13 @@ def main():
                     player.dx += math.sin(player.angle) * 50.0 * fElapsedTime * 5
                     player.dy += -math.cos(player.angle) * 50.0 * fElapsedTime * 5
                     print("key UP")    
+
+        score_text = font.render(f'Player pos.x: {player.dx}, {player.dy}', True, (255, 255, 255))
+        screen.blit(score_text, (2, 25))
        
         # Rysowanie wyniku
         score_text = font.render(f'SCORE: {nScore}', True, (255, 255, 255))
         screen.blit(score_text, (2, 2))
-        score_text = font.render(f'SCORE: {player.dx}', True, (255, 255, 255))
-        screen.blit(score_text, (2, 20))
 
         pg.display.update()
         clock.tick(50)
