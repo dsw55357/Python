@@ -4,7 +4,9 @@ Projekt na zalicznie
 
 Asteroids – gra komputerowa stworzona przez firmę Atari, wydana została w roku 1979 na automaty do gry oraz konsolę Atari 2600. W roku 1981 została wydana na komputer Atari 800. Firma Atari wydała jeszcze oficjalne wersje na konsole Atari 5200 i Atari 7800 oraz na komputery Acorn BBC Micro i Atari ST. 
 
-Status: w trakcie budowy :)
+Status: v.0.1
+
+
 
 """
 
@@ -23,6 +25,7 @@ fElapsedTime = 0.016  # Przykładowa wartość czasu trwania jednej klatki (~60 
 
 bDead = False
 bPause = False
+bMenu  = True
 clock = None
 screen = None
 font = None
@@ -114,6 +117,7 @@ def OnCreate():
 
     # Inicjalizacja czcionki
     pg.font.init()
+
     font = pg.font.Font(None, 36)
 
     clock = pg.time.Clock()
@@ -129,33 +133,11 @@ def OnCreate():
 
 def create_asteroid():
 
-    new_asteroid = SpaceObject(
-        nSize=random.randint(1, 10),
-        x=random.uniform(0, 800),
-        y=random.uniform(0, 600),
-        dx=random.uniform(-1.0, 1.0),
-        dy=random.uniform(-1.0, 1.0),
-        angle=0.0
-    )
-
-    vecAsteroids.append(new_asteroid)
+    pass
 
 def update_asteroids():
 
-    for a in vecAsteroids:
-        a.x += a.dx
-        a.y += a.dy
-
-        # Wrap around screen
-        if a.x < 0:
-            a.x += 800
-        if a.x >= 800:
-            a.x -= 800
-        if a.y < 0:
-            a.y += 600
-        if a.y >= 600:
-            a.y -= 600
-
+    pass
 
 # Funkcja do toroidalnego mapowania współrzędnych
 def wrap_coordinates(ix, iy, screen_width, screen_height):
@@ -216,6 +198,7 @@ def OnUserUpdate():
     
         # Rysowanie modelu asteroid
         draw_wireframe_model(screen, vecModelAsteroid, a.x, a.y, a.angle, a.nSize, (255, 255, 0))
+
         # test
         #pg.draw.circle(screen, (255,0, 0), (a.x, a.y), a.nSize)
 
@@ -260,7 +243,7 @@ def OnUserUpdate():
                 nScore += 100  # Zwiększenie wyniku za trafienie asteroidy
 
         # Rysowanie pocisków
-        pg.draw.circle(screen, (255, 255, 255), (int(bullet.x), int(bullet.y)), 2)
+        pg.draw.circle(screen, (138,43,226), (int(bullet.x), int(bullet.y)), 2)
 
     # Dodanie nowych asteroid do listy
     vecAsteroids.extend(newAsteroids)
@@ -281,7 +264,7 @@ def OnUserUpdate():
     vecBullets = [bullet for bullet in vecBullets if 1 <= bullet.x < screen_width() - 1 and 1 <= bullet.y < screen_height() - 1]
 
     # Narysuj Shipa
-    draw_wireframe_model(screen, vecModelShip, player.x, player.y, player.angle)
+    draw_wireframe_model(screen, vecModelShip, player.x, player.y, player.angle, 2, (227,11,93))
 
 def fill_screen(color):
 
@@ -292,7 +275,7 @@ def main():
 
     print("Asteroids..")
 
-    global fElapsedTime, bDead, nScore, font, boom_sound, bPause
+    global fElapsedTime, bDead, nScore, font, boom_sound, bPause,  bMenu
 
     OnCreate()
 
@@ -300,6 +283,8 @@ def main():
     fire_sound = load_sound("fire.wav")
     boom_sound = load_sound("bangMedium.wav")
     thrust_sound = load_sound("thrust.wav")
+
+    font_game_over = pg.font.Font(None, 46)
 
     running = True
     nScore = 0
@@ -334,18 +319,43 @@ def main():
                     bDead = True # symulujemy kolizję statu z asteroidą
                 if e.key == pg.K_p:
                     bPause = True
+                if e.key == pg.K_m:
+                    bMenu = True                    
 
         # player_pos_text = font.render(f'Player pos.x: {player.x:.2f}, {player.y:.2f}', True, (255, 255, 255))
         # screen.blit(player_pos_text, (2, screen_height()-25))
        
         # Rysowanie wyniku
-        score_text = font.render(f'SCORE: {nScore}', True, (0, 125, 255))
+        score_text = font.render(f'Score: {nScore}', True, (57,255,20))
         screen.blit(score_text, (4, 4))
+
+
+        if bMenu:
+            while bMenu:
+                menu_text = font.render(f'Menu:', True, (0, 255, 255))
+                screen.blit(menu_text, (screen_width()/2-90, screen_height()/2))
+                start_text = font.render(f'Start, press s', True, (251,79,20))
+                screen.blit(start_text, (screen_width()/2-90, screen_height()/2+40))
+                end_game_text = font.render(f'Quit, press q or ESC', True, (139,0,139))
+                screen.blit(end_game_text, (screen_width()/2-90, screen_height()/2+70))
+
+                for e in pg.event.get():
+                    if e.type == pg.KEYDOWN:
+                        if e.key == pg.K_s:
+                            bMenu = False
+                            break
+                        if e.key == pg.K_ESCAPE or e.key == pg.K_q:
+                            running = False
+                            bMenu = False
+                            break
+
+                pg.display.update()
+                clock.tick(50)  
 
         if bPause:
             print("Pause")
             while bPause:
-                pause_text = font.render(f'Pause, press p to start', True, (0, 0, 255))
+                pause_text = font.render(f'Pause, press p to continue', True, (128,218,235))
                 screen.blit(pause_text, (screen_width()/2-80, screen_height()/2))
                 for e in pg.event.get():
                     if e.type == pg.KEYDOWN:
@@ -361,13 +371,13 @@ def main():
             #print("Player is dead!")
 
             while bDead:
-                game_over_text = font.render(f'Game Over', True, (255, 0, 0))
+                game_over_text = font_game_over.render(f'Game Over', True, (255, 0, 0))
                 screen.blit(game_over_text, (screen_width()/2-80, screen_height()/2))
 
-                new_game_text = font.render(f'New game, press n', True, (255, 255, 0))
+                new_game_text = font.render(f'New game, press n', True, (251,79,20))
                 screen.blit(new_game_text, (screen_width()/2-90, screen_height()/2+40))
 
-                end_game_text = font.render(f'Quit, press q or ESC', True, (255, 0, 255))
+                end_game_text = font.render(f'Quit, press q or ESC', True, (139,0,139))
                 screen.blit(end_game_text, (screen_width()/2-90, screen_height()/2+70))
 
                 for e in pg.event.get():
@@ -394,9 +404,3 @@ def main():
 if __name__ == "__main__":
     
     main()
-
-# https://chatgpt.com/c/2cb83072-ae3d-4225-ad70-2e085dfb7d5a
-# https://github.com/pygame/pygame/blob/main/examples/stars.py
-# https://github.com/OneLoneCoder/Javidx9/blob/master/ConsoleGameEngine/SmallerProjects/OneLoneCoder_Asteroids.cpp
-
-# https://www.freecodecamp.org/news/how-to-setup-virtual-environments-in-python/
