@@ -6,8 +6,6 @@ Asteroids – gra komputerowa stworzona przez firmę Atari, wydana została w ro
 
 Status: v.0.2
 
-
-
 """
 
 import os
@@ -23,13 +21,18 @@ WINSIZE = [800, 600]
 
 fElapsedTime = 0.016  # Przykładowa wartość czasu trwania jednej klatki (~60 FPS)
 
-bDead = False
-bPause = False
-bMenu  = True
-clock = None
-screen = None
-font = None
-boom_sound = None
+class GameState:
+    def __init__(self):
+        self.nScore = 0
+        self.bDead = False
+        self.bPause = False
+        self.bMenu  = True
+        self.clock = None
+        self.screen = None
+        self.font = None
+        self.boom_sound = None
+        self.fire_sound = None
+        self.thrust_sound = None
 
 class SpaceObject:
     def __init__(self, nSize, x, y, dx, dy, angle):
@@ -42,12 +45,11 @@ class SpaceObject:
 
 vecAsteroids = []
 vecBullets = []
-player = SpaceObject(0, 0.0, 0.0, 0.0, 0.0, 0.0)
-bDead = False
-nScore = 0
-
 vecModelShip = []
 vecModelAsteroid = []
+
+player = SpaceObject(0, 0.0, 0.0, 0.0, 0.0, 0.0)
+game_State = GameState()
 
 # Model statku jako prosty trójkąt równoramienny
 vecModelShip = [
@@ -78,7 +80,7 @@ def screen_height():
     return WINSIZE[1]  # Przykładowa wysokość ekranu, dostosuj do faktycznych wymiarów
 
 def reset_game():
-    global bDead, nScore, player, vecBullets, vecAsteroids
+    global player, vecBullets, vecAsteroids
 
     # Inicjalizacja pozycji gracza
     player.x = screen_width() / 2.0
@@ -98,29 +100,29 @@ def reset_game():
     vecAsteroids.append(SpaceObject(nSize=50, x=screen_width()-200, y=200, dx=5.0, dy=-3.0, angle=0.0))
 
     # Resetowanie stanu gry
-    bDead = False
-    nScore = 0 
+    game_State.bDead = False
+    game_State.nScore = 0 
 
 # Tworzenie "postrzępionego" koła dla asteroidy
 def OnCreate():
 
-    global clock, screen, font
+    global font
 
     # initialize and prepare screen
     pg.init()
 
-    screen = pg.display.set_mode(WINSIZE)
+    game_State.screen = pg.display.set_mode(WINSIZE)
     pg.display.set_caption("pygame: Asteroids ")
-    white = 255, 240, 200
+    # white = 255, 240, 200
     black = 20, 20, 40
-    screen.fill(black)
+    game_State.screen.fill(black)
 
     # Inicjalizacja czcionki
     pg.font.init()
 
     font = pg.font.Font(None, 36)
 
-    clock = pg.time.Clock()
+    game_State.clock = pg.time.Clock()
 
     verts = 20
     for i in range(verts):
@@ -185,7 +187,7 @@ def is_point_inside_circle(cx, cy, radius, px, py):
 
 def OnUserUpdate():
 
-    global fElapsedTime, bDead, vecBullets, nScore, vecAsteroids, boom_sound
+    global fElapsedTime, vecBullets, vecAsteroids
     #fElapsedTime = 0.016  # Przykładowa wartość czasu trwania jednej klatki (~60 FPS)
 
     for a in vecAsteroids:
@@ -197,7 +199,7 @@ def OnUserUpdate():
         a.x, a.y = wrap_coordinates(a.x, a.y, screen_width(), screen_height())
     
         # Rysowanie modelu asteroid
-        draw_wireframe_model(screen, vecModelAsteroid, a.x, a.y, a.angle, a.nSize, (255, 255, 0))
+        draw_wireframe_model(game_State.screen, vecModelAsteroid, a.x, a.y, a.angle, a.nSize, (255, 255, 0))
 
         # test
         #pg.draw.circle(screen, (255,0, 0), (a.x, a.y), a.nSize)
@@ -211,9 +213,9 @@ def OnUserUpdate():
     # Sprawdzenie kolizji statku z asteroidami
     for a in vecAsteroids:
         if is_point_inside_circle(a.x, a.y, a.nSize, player.x, player.y):
-            if pg.mixer and boom_sound is not None:
-                boom_sound.play()
-            bDead = True
+            if pg.mixer and game_State.boom_sound is not None:
+                game_State.boom_sound.play()
+            game_State.bDead = True
 
     newAsteroids = []
 
@@ -228,8 +230,8 @@ def OnUserUpdate():
             if is_point_inside_circle(a.x, a.y, a.nSize, bullet.x, bullet.y):
                 # Pocisk trafia asteroidę - usuwamy pocisk
                 bullet.x = -100  # Pocisk poza ekranem, zostanie usunięty w algorytmie czyszczenia
-                if pg.mixer and boom_sound is not None:
-                    boom_sound.play()
+                if pg.mixer and game_State.boom_sound is not None:
+                    game_State.boom_sound.play()
 
                 # Tworzenie mniejszych asteroid po zniszczeniu dużej
                 if a.nSize > 6:
@@ -240,10 +242,10 @@ def OnUserUpdate():
 
                 # Usuwanie asteroidy
                 a.x = -100  # Asteroida poza ekranem, zostanie usunięta w algorytmie czyszczenia
-                nScore += 100  # Zwiększenie wyniku za trafienie asteroidy
+                game_State.nScore += 100  # Zwiększenie wyniku za trafienie asteroidy
 
         # Rysowanie pocisków
-        pg.draw.circle(screen, (138,43,226), (int(bullet.x), int(bullet.y)), 2)
+        pg.draw.circle(game_State.screen, (138,43,226), (int(bullet.x), int(bullet.y)), 2)
 
     # Dodanie nowych asteroid do listy
     vecAsteroids.extend(newAsteroids)
@@ -253,7 +255,7 @@ def OnUserUpdate():
 
     # Sprawdzenie, czy wszystkie asteroidy zostały zniszczone
     if not vecAsteroids:
-        nScore += 1000  # Duży bonus za ukończenie poziomu
+        game_State.nScore += 1000  # Duży bonus za ukończenie poziomu
         vecBullets.clear()
         # Dodanie dwóch nowych asteroid
         vecAsteroids.append(SpaceObject(16, 30.0 * math.sin(player.angle - math.pi / 2) + player.x, 30.0 * math.cos(player.angle - math.pi / 2) + player.y, 10.0 * math.sin(player.angle), 10.0 * math.cos(player.angle), 0.0))
@@ -264,32 +266,33 @@ def OnUserUpdate():
     vecBullets = [bullet for bullet in vecBullets if 1 <= bullet.x < screen_width() - 1 and 1 <= bullet.y < screen_height() - 1]
 
     # Narysuj Shipa
-    draw_wireframe_model(screen, vecModelShip, player.x, player.y, player.angle, 2, (227,11,93))
+    draw_wireframe_model(game_State.screen, vecModelShip, player.x, player.y, player.angle, 2, (227,11,93))
 
 def fill_screen(color):
 
-    screen.fill(color)
+    game_State.screen.fill(color)
     #pg.display.flip()
+
 
 def main():
 
     print("Asteroids..")
 
-    global fElapsedTime, bDead, nScore, font, boom_sound, bPause,  bMenu
+    global fElapsedTime
 
     OnCreate()
 
     # load the sound effects
-    fire_sound = load_sound("fire.wav")
-    boom_sound = load_sound("bangMedium.wav")
-    thrust_sound = load_sound("thrust.wav")
+    game_State.boom_sound = load_sound("bangMedium.wav")
+    game_State.fire_sound = load_sound("fire.wav")
+    game_State.thrust_sound = load_sound("thrust.wav")
 
     font_game_over = pg.font.Font(None, 46)
 
-    running = True
-    nScore = 0
+    game_State.running = True
+    game_State.nScore = 0
 
-    while running:
+    while game_State.running:
 
         fill_screen((0, 0, 0))  # Wypełnia ekran kolorem czarnym (RGB: 0, 0, 0)
 
@@ -309,95 +312,94 @@ def main():
                 if e.key == pg.K_UP:
                     player.dx += math.sin(player.angle) * 50.0 * fElapsedTime * 5
                     player.dy += -math.cos(player.angle) * 50.0 * fElapsedTime * 5
-                    if pg.mixer and thrust_sound is not None:
-                        thrust_sound.play()
+                    if pg.mixer and game_State.thrust_sound is not None:
+                        game_State.thrust_sound.play()
                 if e.key == pg.K_SPACE:
                     vecBullets.append(SpaceObject(0, player.x, player.y, 50.0 * math.sin(player.angle), -50.0 * math.cos(player.angle), 0.0))
-                    if pg.mixer and fire_sound is not None:
-                        fire_sound.play()
+                    if pg.mixer and game_State.fire_sound is not None:
+                        game_State.fire_sound.play()
                 if e.key == pg.K_F8:
-                    bDead = True # symulujemy kolizję statu z asteroidą
+                    game_State.bDead = True # symulujemy kolizję statu z asteroidą
                 if e.key == pg.K_p:
-                    bPause = True
+                    game_State.bPause = True
                 if e.key == pg.K_m:
-                    bMenu = True                    
+                    game_State.bMenu = True                    
 
         # player_pos_text = font.render(f'Player pos.x: {player.x:.2f}, {player.y:.2f}', True, (255, 255, 255))
         # screen.blit(player_pos_text, (2, screen_height()-25))
        
         # Rysowanie wyniku
-        score_text = font.render(f'Score: {nScore}', True, (57,255,20))
-        screen.blit(score_text, (4, 4))
+        score_text = font.render(f'Score: {game_State.nScore}', True, (57,255,20))
+        game_State.screen.blit(score_text, (4, 4))
 
 
-        if bMenu:
-            while bMenu:
+        if game_State.bMenu:
+            while game_State.bMenu:
                 menu_text = font.render(f'Menu:', True, (0, 255, 255))
-                screen.blit(menu_text, (screen_width()/2-90, screen_height()/2))
+                game_State.screen.blit(menu_text, (screen_width()/2-90, screen_height()/2))
                 start_text = font.render(f'Start, press s', True, (251,79,20))
-                screen.blit(start_text, (screen_width()/2-90, screen_height()/2+40))
+                game_State.screen.blit(start_text, (screen_width()/2-90, screen_height()/2+40))
                 end_game_text = font.render(f'Quit, press q or ESC', True, (139,0,139))
-                screen.blit(end_game_text, (screen_width()/2-90, screen_height()/2+70))
+                game_State.screen.blit(end_game_text, (screen_width()/2-90, screen_height()/2+70))
 
                 for e in pg.event.get():
                     if e.type == pg.KEYDOWN:
                         if e.key == pg.K_s:
-                            bMenu = False
+                            game_State.bMenu = False
                             break
                         if e.key == pg.K_ESCAPE or e.key == pg.K_q:
-                            running = False
-                            bMenu = False
+                            game_State.running = False
+                            game_State.bMenu = False
                             break
 
                 pg.display.update()
-                clock.tick(50)  
+                game_State.clock.tick(50)  
 
-        if bPause:
+        if game_State.bPause:
             print("Pause")
-            while bPause:
+            while game_State.bPause:
                 pause_text = font.render(f'Pause, press p to continue', True, (128,218,235))
-                screen.blit(pause_text, (screen_width()/2-80, screen_height()/2))
+                game_State.screen.blit(pause_text, (screen_width()/2-80, screen_height()/2))
                 for e in pg.event.get():
                     if e.type == pg.KEYDOWN:
                         if e.key == pg.K_p:
-                            bPause = False
+                            game_State.bPause = False
                             break
                 
                 pg.display.update()
-                clock.tick(50)  
+                game_State.clock.tick(50)  
 
         # Sprawdzenie, czy gracz jest martwy
-        if bDead:
+        if game_State.bDead:
             #print("Player is dead!")
 
-            while bDead:
+            while game_State.bDead:
                 game_over_text = font_game_over.render(f'Game Over', True, (255, 0, 0))
-                screen.blit(game_over_text, (screen_width()/2-80, screen_height()/2))
+                game_State.screen.blit(game_over_text, (screen_width()/2-80, screen_height()/2))
 
                 new_game_text = font.render(f'New game, press n', True, (251,79,20))
-                screen.blit(new_game_text, (screen_width()/2-90, screen_height()/2+40))
+                game_State.screen.blit(new_game_text, (screen_width()/2-90, screen_height()/2+40))
 
                 end_game_text = font.render(f'Quit, press q or ESC', True, (139,0,139))
-                screen.blit(end_game_text, (screen_width()/2-90, screen_height()/2+70))
+                game_State.screen.blit(end_game_text, (screen_width()/2-90, screen_height()/2+70))
 
                 for e in pg.event.get():
                     if e.type == pg.KEYDOWN:
-                        print("...")
                         if e.key == pg.K_n:
                             reset_game() # zaczynamy od nowa
                             break
                         if e.key == pg.K_ESCAPE or e.key == pg.K_q:
-                            running = False
-                            bDead = False
+                            game_State.running = False
+                            game_State.bDead = False
                             break
 
                 pg.display.update()
-                clock.tick(50)
+                game_State.clock.tick(50)
 
             #reset_game() # zaczynamy od nowa
         
         pg.display.update()
-        clock.tick(50)
+        game_State.clock.tick(50)
 
     pg.quit()   
 
